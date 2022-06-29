@@ -26,26 +26,28 @@
   </header>
 </template>
 
-<script setup lang="ts">
+<script lang="ts">
+import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 import { useWorkspaceStore } from '~/store/workspace'
-import { watch, computed } from 'vue'
-import { useRoute } from 'vue-router'
 
-const route = useRoute()
-
-const workspaceStore = useWorkspaceStore()
-const currentWorkdpaceId = computed(() => {
-  return route.params.id as string
+export default defineComponent({
+  computed: {
+    ...mapStores(useWorkspaceStore),
+    currentWorkspaceId() {
+      return this.$route.params.id as string
+    }
+  },
+  watch: {
+    // 스토어 상태(점 표기법)를 감시하는 패턴!
+    ['workspaceStore.workspacesLoaded'](loaded) {
+      loaded && this.workspaceStore.findWorkspacePath(this.currentWorkspaceId)
+    },
+    $route() {
+      this.workspaceStore.findWorkspacePath(this.currentWorkspaceId)
+    }
+  }
 })
-
-watch(() => workspaceStore.workspacesLoaded, loaded => {
-  loaded && workspaceStore.findWorkspacePath(currentWorkdpaceId.value)
-})
-
-watch(route, () => {
-  workspaceStore.findWorkspacePath(currentWorkdpaceId.value)
-})
-
 </script>
 
 <style lang="scss" scoped>
